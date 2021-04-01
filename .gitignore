@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+process_lm_sino_explorer_singlefile_release
+
+# Files
+Reconstruction_Parameters_*
+
+# Folders
+lut/
+temp_out/
