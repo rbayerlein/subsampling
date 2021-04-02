@@ -31,9 +31,12 @@
 *.out
 *.app
 process_lm_sino_explorer_singlefile_release
+test
 
 # Supplementory Files
 Reconstruction_Parameters_*
+crys_eff_679x840
+Makefile_template_ThinkPad_T460
 
 # Folders
 lut/

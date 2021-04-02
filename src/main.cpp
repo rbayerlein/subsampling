@@ -1058,11 +1058,11 @@ int main(int argc, char **argv) {
 				modA = bank_lut[bankk][0];	// returns bank A
 				modB = bank_lut[bankk][1];	// and bank B
 
-				transA = transA + (modA * 70);	// absolute transaxial crystal ID
-				transB = transB + (modB * 70);
+				transA = transA + (modA * 70);	// absolute transaxial crystal ID A
+				transB = transB + (modB * 70);	// there are 70 transaxial crystals per bank (bank = 2*module)
 
-				axA = floor(crys1 / 70) + (unitA * 84);	// absolute transaxial IID
-				axB = floor(crys2 / 70) + (unitB * 84);
+				axA = floor(crys1 / 70) + (unitA * 84);	// absolute axial crystal ID A
+				axB = floor(crys2 / 70) + (unitB * 84);	// there are 84 axial crystals per module/unit
 
 				blkXa = floor(transA / 7);
 				blkXb = floor(transB / 7);
