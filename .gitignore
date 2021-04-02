@@ -32,7 +32,7 @@
 *.app
 process_lm_sino_explorer_singlefile_release
 
-# Files
+# Supplementory Files
 Reconstruction_Parameters_*
 
 # Folders

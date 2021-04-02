@@ -7,6 +7,10 @@
 
 #include "../include/coinc.h"
 
+/*! \main function for reading in lm raw data */
+/// \file main.cpp
+/// \brief Implementation of raw data reading in list mode
+
 #define PI 3.141592653589793
 #define BUFFER_SIZE 65536
 
@@ -1040,24 +1044,24 @@ int main(int argc, char **argv) {
 				}
 				num_coinc += 1.0;
 
-				unitA = COINC::GetUiA(pRawBuffer[i]);
+				unitA = COINC::GetUiA(pRawBuffer[i]);	// 0:7 NOT 1:8
 				unitB = COINC::GetUiB(pRawBuffer[i]);
 
 				crys1 = COINC::GetCrysA(pRawBuffer[i]);
 				crys2 = COINC::GetCrysB(pRawBuffer[i]);
 
-				bankk = COINC::GetBankPair(pRawBuffer[i]) - 1;
+				bankk = COINC::GetBankPair(pRawBuffer[i]) - 1;	// returns bank pair index 0:53
 
-				transA = crys1 % 70;
+				transA = crys1 % 70; // transaxial crystal ID within a bank
 				transB = crys2 % 70;
 
-				modA = bank_lut[bankk][0];
-				modB = bank_lut[bankk][1];
+				modA = bank_lut[bankk][0];	// returns bank A
+				modB = bank_lut[bankk][1];	// and bank B
 
-				transA = transA + (modA * 70);
+				transA = transA + (modA * 70);	// absolute transaxial crystal ID
 				transB = transB + (modB * 70);
 
-				axA = floor(crys1 / 70) + (unitA * 84);
+				axA = floor(crys1 / 70) + (unitA * 84);	// absolute transaxial IID
 				axB = floor(crys2 / 70) + (unitB * 84);
 
 				blkXa = floor(transA / 7);
