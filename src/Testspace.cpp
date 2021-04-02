@@ -111,9 +111,8 @@ int main(int argc, char* argv[]) {
 
 
 	/// ************	Main Test Space Start  ****************///
-
-	bool found_first_coincidence = false;
-	while (!found_first_coincidence) { // stop when first timestamp found
+	int eventCounter=0;
+	while (eventCounter < 100) { // stop when first timestamp found
 		unsigned long long read_count = fread(pRawBuffer, sizeof(uint64_t), BUFFER_SIZE, pInputFile); // returns BUFFER_SIZE events; read unless EOF
 				// reads n elements (n=BUFFER_SIZE) into a block of memory (specified as pRawBuffer), each with a size of "sizeof(uint64_t)"
 				// uint64_t is unsigned int with exactly 64 bit
@@ -139,10 +138,11 @@ int main(int argc, char* argv[]) {
 
 				axA = floor(crys1 / 70) + (unitA * 84);	// absolute axial crystal ID A
 				axB = floor(crys2 / 70) + (unitB * 84);	// there are 84 axial crystals per module/unit
+				cout << "event " << eventCounter << endl;
+				cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
+				cout << "keep event (1=yes):\t" << SUBS.KeepEvent(axA, axB, transA, transB) << endl;
 
-				cout << transA << "\t" << transB << "\t" << axA << "\t" << axB << "\t" << endl;
-
-				found_first_coincidence = true;
+				eventCounter++;
 				//char strout[1024];
 				//sprintf(strout, "%s%dY-%dM-%dD-%dh-%dm-%ds-%dms.", "time stamp: ", year00, month00, day00, hour00, minute00, second00, milli00);
 				//cout << strout << endl;

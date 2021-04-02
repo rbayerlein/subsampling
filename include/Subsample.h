@@ -1,4 +1,5 @@
-/*!	\file subsample.hh
+/*!	
+	\file subsample.hh
 	\brief Definition of Class Subsample.cpp 
 
 	Subsampling of the EXPLORER data to mimic shorter scanners or damages or axial gaps for TO scanners
@@ -19,24 +20,27 @@ using namespace std;
 
 class Subsample {
 public:
-	Subsample(std::string s);									/*!< Constructor */
-	virtual ~Subsample();										/*!< Destructor */
-	bool KeepEvent(int axA, int axB, int transA, int trabsB); 	/*!< Function that decides if that specific crystal pair specified by the given coordinates shall be kept */
+	Subsample(std::string s);										/*!< Constructor. Invokes read_crys_eff() to read in the crystal efficiencies from file. */
+	virtual ~Subsample();											/*!< Destructor */
+	bool KeepEvent(int axA, int axB, int transA, int transB); 		/*!< Function that decides if that specific crystal pair specified by the given coordinates shall be kept.
+																	Takes the axial and transaxial coordinates of the two coincident crystals as input.
+																	*/
 
 	std::string GetRawInputFullPath(){return input_raw_fullpath;};
 	std::string GetCrysEffFullPath(){return input_crys_eff;};
 
 private:
-	void read_crys_eff();				/*!< Function to read in the crystall efficieny from file  */
-	std::string input_raw_fullpath;		/*!< Input file path for the Reconstruction_Paramters_X file (where X in 1:8) */
-	std::string input_crys_eff;			/*!< Full path to the crys_eff file */
-	static const unsigned int BUFFER_size = 679*840;	/*!< Size of the allocated memory into which crystal efficiencies will be read */
-	float crys_eff[BUFFER_size+1000]; 			/*!< crystal efficiencies from file. Dimensions: axial * transaxial = 564480. Uses linear indexing */
+	void read_crys_eff();											/*!< Function to read in the crystall efficieny from file  */
+	std::string input_raw_fullpath;									/*!< Input file path for the Reconstruction_Paramters_X file (where X in 1:8) */
+	std::string input_crys_eff;										/*!< Full path to the crys_eff file */
+	static const unsigned int BUFFER_size = 679*840;				/*!< Size of the allocated memory into which crystal efficiencies will be read */
+	static const unsigned int NUM_dummy_crystals = 7*840;			/*!< number of dummy crystals to skip. there are 7 rings of crystals */
+	float crys_eff_672x840[BUFFER_size - NUM_dummy_crystals]; 		/*!< crystal efficiencies from file. Dimensions: axial * transaxial = 564480. Uses linear indexing */
 
-	int num_ax_crys_mod=84;				/*!< Number of crystals per module (also per unit) in axial direction */
-	int num_trans_crys_mod=70;			/*!< Number of crystals per module in TRANSaxial direction */
-	int num_trans_crys_ring=840;		/*!< Number of crystals per transaxial ring*/
-	
+	int num_ax_crys_mod=84;											/*!< Number of crystals per module (also per unit) in axial direction */
+	int num_trans_crys_mod=70;										/*!< Number of crystals per module in TRANSaxial direction */
+	int num_trans_crys_ring=840;									/*!< Number of crystals per transaxial ring (there is no axial ring, of course)*/
+
 };
 
 
