@@ -82,16 +82,13 @@ void Subsample::read_crys_eff(){
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 	bool Subsample::KeepEvent(int axA, int axB, int transA, int transB) // Takes the axial and transaxial coordinates of the two coincident crystals as input.
 	{ 
-		bool keep = true;
 		int linearCrysIndex_A, linearCrysIndex_B;
 		linearCrysIndex_A = axA*num_ax_crys_mod + transA;
 		linearCrysIndex_B = axB*num_trans_crys_ring + transB;
-		if(crys_eff_672x840[linearCrysIndex_A] == 0 || crys_eff_672x840[linearCrysIndex_B] == 0) keep = false;
+	//	if(crys_eff_672x840[linearCrysIndex_A] == 0 || crys_eff_672x840[linearCrysIndex_B] == 0) keep = false;
 		
-		/*
-	ALTERNATIVE: for later, when the crystal efficiency is set to a very high value instead of zero
-		if(crys_eff_672x840[linearCrysIndex_A] > 10000 || crys_eff_672x840[linearCrysIndex_B] == 10000) keep = false;
+//	ALTERNATIVE: for later, when the crystal efficiency is set to a very high value instead of zero
+		if(crys_eff_672x840[linearCrysIndex_A] > 100000 || crys_eff_672x840[linearCrysIndex_B] > 100000) return false;
 		
-		*/
-		return keep;
+		return true;
 	}
