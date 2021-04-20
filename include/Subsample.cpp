@@ -37,8 +37,8 @@ void Subsample::read_crys_eff(){
 	/// BUT be careful! There is an additional 7 crystals in axial direction to compensate for the gap betweeen units.
 
 /// get file path 
-	string str_find = "PET";
-	string input_crys_eff_TEMP;
+	std::string str_find = "PET";
+	std::string input_crys_eff_TEMP;
 	size_t found = input_raw_fullpath.find(str_find);
 	input_crys_eff_TEMP = input_raw_fullpath.substr(0, found);
 	stringstream ss ;
@@ -85,10 +85,10 @@ void Subsample::read_crys_eff(){
 		int linearCrysIndex_A, linearCrysIndex_B;
 		linearCrysIndex_A = axA*num_ax_crys_mod + transA;
 		linearCrysIndex_B = axB*num_trans_crys_ring + transB;
-	//	if(crys_eff_672x840[linearCrysIndex_A] == 0 || crys_eff_672x840[linearCrysIndex_B] == 0) keep = false;
+		if(crys_eff_672x840[linearCrysIndex_A] == 0 || crys_eff_672x840[linearCrysIndex_B] == 0) return false;
 		
 //	ALTERNATIVE: for later, when the crystal efficiency is set to a very high value instead of zero
-		if(crys_eff_672x840[linearCrysIndex_A] > 100000 || crys_eff_672x840[linearCrysIndex_B] > 100000) return false;
+	//	if(crys_eff_672x840[linearCrysIndex_A] > 100000 || crys_eff_672x840[linearCrysIndex_B] > 100000) return false;
 		
 		return true;
 	}

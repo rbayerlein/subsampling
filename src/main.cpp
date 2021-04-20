@@ -6,6 +6,7 @@
 #include <unistd.h> // for debugging only: to use function sleep()
 
 #include "../include/coinc.h"
+#include "../include/Subsample.h"
 
 /*! \main function for reading in lm raw data */
 /// \file main.cpp
@@ -544,6 +545,10 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	//Subsample* SUBS;
+	//SUBS = new Subsample(temp_str);
+	Subsample SUBS(infile_fullpath);
+
 	// crystal index - sinogram bin LUTs
 	vector<int> index_crystalpairs_transaxial_int16_1(num_bins_sino);
 	vector<int> index_crystalpairs_transaxial_int16_2(num_bins_sino);
@@ -887,6 +892,7 @@ int main(int argc, char **argv) {
 	cout << "*** Getting initial count rates ***" << endl;
 
 	bool found_initial_count_rate = false;
+	bool keep_event = true;
 	while (!found_initial_count_rate) { // stop when initial count rate found
 		unsigned long long read_count = fread(pRawBuffer, sizeof(uint64_t),
 		BUFFER_SIZE, pInputFile); // returns BUFFER_SIZE events read unless EOF
@@ -1064,6 +1070,14 @@ int main(int argc, char **argv) {
 				axA = floor(crys1 / 70) + (unitA * 84);	// absolute axial crystal ID A
 				axB = floor(crys2 / 70) + (unitB * 84);	// there are 84 axial crystals per module/unit
 
+				keep_event = SUBS.KeepEvent(axA, axB, transA, transB);
+				if (!keep_event){
+					cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
+					cout << "keep event " << num_coinc << " (1=yes):\t" << keep_event << endl;
+					num_coinc -= 1.0;
+					continue;
+				}
+
 				blkXa = floor(transA / 7);
 				blkXb = floor(transB / 7);
 				blkYa = floor(axA / 6);
@@ -1135,8 +1149,14 @@ int main(int argc, char **argv) {
 	bool next_frame = false;
 	time_s = 0; // reset overall time
 
+	int TEST_COUNTER = 0;
 	bool run = true;
 	while (run) {
+		TEST_COUNTER++;
+		if (TEST_COUNTER>1) {
+			cout << "TEST_COUNTER larger 1"<< endl;
+			break;
+		}
 		unsigned long long read_count = fread(pRawBuffer, sizeof(uint64_t),
 		BUFFER_SIZE, pInputFile); // returns BUFFER_SIZE events read unless EOF
 		for (unsigned long long i = 0; i < read_count; i++) { // loop through each event
@@ -1387,6 +1407,14 @@ int main(int argc, char **argv) {
 
 				axA = floor(crys1 / 70) + (unitA * 84);
 				axB = floor(crys2 / 70) + (unitB * 84);
+
+				keep_event = SUBS.KeepEvent(axA, axB, transA, transB);
+				if (!keep_event){
+					cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
+					cout << "keep event " << num_coinc << " (1=yes):\t" << keep_event << endl;
+					num_coinc -= 1.0;
+					continue;
+				}		
 
 				
 				blkXa = floor(transA / 7);

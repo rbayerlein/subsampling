@@ -9,8 +9,8 @@ CXX = g++
 CXXFLAGS = -std=c++14
 
 all : $(bin) $(bin_TS)
-$(bin) : $(src)/main.o $(inc)/coinc.o
-	$(CXX) $(CXXFLAGS) -o $(bin) $(src)/main.o $(inc)/coinc.o
+$(bin) : $(src)/main.o $(inc)/coinc.o $(inc)/Subsample.o
+	$(CXX) $(CXXFLAGS) -o $(bin) $(src)/main.o $(inc)/coinc.o $(inc)/Subsample.o
 
 main.o : $(src)/.cpp $(inc)/coinc.h
 
