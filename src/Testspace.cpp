@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
 
 	/// ************	Main Test Space Start  ****************///
 	int eventCounter=0;
-	while (eventCounter < 100) { // stop when first timestamp found
+	while (eventCounter < 20) { // stop when first timestamp found
 		unsigned long long read_count = fread(pRawBuffer, sizeof(uint64_t), BUFFER_SIZE, pInputFile); // returns BUFFER_SIZE events; read unless EOF
 				// reads n elements (n=BUFFER_SIZE) into a block of memory (specified as pRawBuffer), each with a size of "sizeof(uint64_t)"
 				// uint64_t is unsigned int with exactly 64 bit

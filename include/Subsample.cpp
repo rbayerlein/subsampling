@@ -19,6 +19,8 @@ Subsample::Subsample(std::string s) /*!< Takes the full path to the .raw file as
 		}
 		input_crys_eff = "empty";	// pre initialize. Good coding practice or so... I don't know. I'm not a programmer 
 	read_crys_eff();
+	output_DEBUG= "DEBUG.txt";
+	o_DEBUG.open(output_DEBUG.c_str(), std::ios_base::app);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -32,6 +34,7 @@ Subsample::~Subsample(){		// Destructor
 void Subsample::read_crys_eff(){
 
 	cout << "Reading in crystal efficiency for LUT in Subsampling class..."<< endl;
+	o_DEBUG << "Reading in crystal efficiency for LUT in Subsampling class..."<< endl;
 	/// The file to read in is here: /UCD/Image/crys_eff_679x840.
 	/// take input file path and go back to level PET. In the same level there is UCD/Image/ and there is the crys_eff_679x840 file.
 	/// BUT be careful! There is an additional 7 crystals in axial direction to compensate for the gap betweeen units.
@@ -58,37 +61,47 @@ void Subsample::read_crys_eff(){
 
 	int gaps_skipped = 0;
 	int rows_counter = 0;
-	int trans_crys_counter = 0;
+	int column_counter=0;
 /// loop through all entries in the BUFFER and skip the 7 inter-unit gaps. Write into array crys_eff_672x840[].
 	for (int i = 0; i < BUFFER_size - NUM_dummy_crystals; ++i)
 	{
-		trans_crys_counter++;
-		if (trans_crys_counter > 840) {
-			rows_counter ++;
-			trans_crys_counter=1;
-		}
+		rows_counter++;
 		if(rows_counter == 85){		// to skip the crystal ring which corresponds to the inter-unit gap 
 			gaps_skipped++;	
-			cout << "skipping gap number " << gaps_skipped << endl;
-			rows_counter=0;
+			rows_counter=1;
 		}
-		crys_eff_672x840[i] = BUFFER[i+gaps_skipped*num_trans_crys_ring];
+		if(i>1 && (i % 672 == 0)){
+			
+			rows_counter=1;
+			gaps_skipped--;
+			column_counter++;
+		}
+		crys_eff_672x840[i] = BUFFER[i+gaps_skipped];
 	}
+	std::string crysEff_out_filepath = "crys_eff_readIn";
+
+	FILE *crysEff_Out = fopen(crysEff_out_filepath.c_str(), "wb");
+	fwrite(crys_eff_672x840, sizeof(float), BUFFER_size - NUM_dummy_crystals, crysEff_Out);
+	fclose(crysEff_Out);
 	fclose(fInput);
 	cout << "...done" << endl;
+	o_DEBUG << "...done" << endl;
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 	bool Subsample::KeepEvent(int axA, int axB, int transA, int transB) // Takes the axial and transaxial coordinates of the two coincident crystals as input.
 	{ 
 		int linearCrysIndex_A, linearCrysIndex_B;
-		linearCrysIndex_A = axA*num_ax_crys_mod + transA;
-		linearCrysIndex_B = axB*num_trans_crys_ring + transB;
-		if(crys_eff_672x840[linearCrysIndex_A] == 0 || crys_eff_672x840[linearCrysIndex_B] == 0) return false;
+//		linearCrysIndex_A = axA*num_ax_crys_mod + transA;
+//		linearCrysIndex_B = axB*num_trans_crys_ring + transB;
+		linearCrysIndex_A = num_ax_crys_mod * num_units * (transA - 1) + axA;
+		linearCrysIndex_B = num_ax_crys_mod * num_units * (transB - 1) + axB;
+//		if(crys_eff_672x840[linearCrysIndex_A] == 0 || crys_eff_672x840[linearCrysIndex_B] == 0) return false;
 		
 //	ALTERNATIVE: for later, when the crystal efficiency is set to a very high value instead of zero
-	//	if(crys_eff_672x840[linearCrysIndex_A] > 100000 || crys_eff_672x840[linearCrysIndex_B] > 100000) return false;
-		
+		if(crys_eff_672x840[linearCrysIndex_A] > 100000 || crys_eff_672x840[linearCrysIndex_B] > 100000){
+		//	o_DEBUG << "removed event with coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
+			return false;
+		}
 		return true;
 	}

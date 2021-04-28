@@ -40,7 +40,10 @@ private:
 	int num_ax_crys_mod=84;											/*!< Number of crystals per module (also per unit) in axial direction */
 	int num_trans_crys_mod=70;										/*!< Number of crystals per module in TRANSaxial direction */
 	int num_trans_crys_ring=840;									/*!< Number of crystals per transaxial ring (there is no axial ring, of course)*/
+	int num_units=8;												/*!< Number of units (and modules) in axial direction*/
 
+	std::string output_DEBUG;
+	ofstream o_DEBUG;
 };
 
 

@@ -1,0 +1,4 @@
+#!/bin/bash
+for (( i = 1; i < 9; i++ )); do
+	./process_lm_sino_explorer_singlefile_release Reconstruction_Parameters_${i}
+done

@@ -1,0 +1,2 @@
+#!/bin/bash
+./combine_listmode temp_out/lm_reorder_f0.lm temp_out/lm_reorder_f0_prompts.1.lm temp_out/lm_reorder_f0_prompts.2.lm temp_out/lm_reorder_f0_prompts.3.lm temp_out/lm_reorder_f0_prompts.4.lm temp_out/lm_reorder_f0_prompts.5.lm temp_out/lm_reorder_f0_prompts.6.lm temp_out/lm_reorder_f0_prompts.7.lm temp_out/lm_reorder_f0_prompts.8.lm

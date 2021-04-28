@@ -3,9 +3,15 @@
 #include <sstream>
 #include <vector>
 #include <math.h> // deprecated - try <cmath> later
+#include <unistd.h> // for debugging only: to use function sleep()
 
 #include "../include/coinc.h"
 #include "../include/Subsample.h"
+
+/*! \main function for reading in lm raw data */
+/// \file main.cpp
+/// \brief Implementation of raw data reading in list mode
+/// this is the original client-side lm decoder that was modified to incorporate the subsample class
 
 #define PI 3.141592653589793
 #define BUFFER_SIZE 65536
@@ -229,7 +235,6 @@ int main(int argc, char **argv) {
 	int num_bins_sino = 549 * 420;
 	int num_bins_sino2 = num_bins_sino / 6;
 	int num_bins_sino_block = 91 * 60;
-        int num_block_ring = 112; 
 	int num_bins_sino_module = 21 * 12;
 	int num_slice = 1343;
 	int num_slice_block = 223;
@@ -299,22 +304,16 @@ int main(int argc, char **argv) {
 	}
 
 	// sinogram variables
-	long ind, ind2, ind_block, ind_block_trans, ind_block1, ind_block2, ind_module1, ind_module2,
+	long ind, ind2, ind_block, ind_block2, ind_module1, ind_module2,
 			ind_module_trans = 0;
 	int nv, nu, nvtemp, nutemp, ntemp = 0;
 	int sino_ax_span = 10000;
 	int block_ax_span = 2;
 	int num_lor_modpair = 4323270;
-	int num_lor_blkpair = 903;
 	int michel_ind = 0;
 
-	vector<double> sino_block(num_bins_sino_block * num_block_ring * num_block_ring);
-	vector<double> sino_block_r(num_bins_sino_block * num_block_ring * num_block_ring);
-    
-        for (int blocki = 0; blocki < (num_bins_sino_block * num_block_ring * num_block_ring); blocki++) { 
-		sino_block[blocki] = 0.0; 
-                sino_block_r[blocki] = 0.0;
-        } 
+	vector<int> sino_block(num_bins_sino_block * num_slice_block);
+	vector<int> sino_block_r(num_bins_sino_block * num_slice_block);
 
 	vector<double> sino_module_r_new(num_bins_sino_module * 8 * 8);
 	vector<double> sino_module_r_avg(num_bins_sino_module * 8 * 8);
@@ -354,7 +353,6 @@ int main(int argc, char **argv) {
 	bool r_singles = false;
 
 	float mtemp = 1.0;
-	float stemp = 0.0;
 
 	// dead time
 	double tau_s = 0.37E-6;
@@ -380,7 +378,6 @@ int main(int argc, char **argv) {
 	bool write_lm = false;
 	string runrecon_str = "";
 	string removeraws_str = "";
-
 
 	///////////////////////////////////////////////////////////////////////////
 
@@ -508,25 +505,8 @@ int main(int argc, char **argv) {
 
 	// block sino names
 	string fname_sino_block;
-	string blocksino_fullpath_p;
-	string blocksino_fullpath_r;
-
-	stringstream bbss; 
-	bbss << "block_sino_f" << frame_num; 
-	fname_out = bbss.str(); 
-	
-	blocksino_fullpath_p = outfolder + fname_out + "_prompts." + raw_num + ".raw"; 
-	blocksino_fullpath_r = outfolder + fname_out + "_randoms." + raw_num + ".raw"; 
-
-	ofstream outfile_block_sino; 
-	ofstream outfile_block_sino_r; 
-
-	outfile_block_sino.open(blocksino_fullpath_p.c_str(), ios::out | ios::binary); 
-	outfile_block_sino_r.open(blocksino_fullpath_r.c_str(), ios::out | ios::binary); 
-	
-	fname_out = ""; 
-	bbss << ""; 
-	bbss.clear(); 
+	string sino_fullpath_block_p;
+	string sino_fullpath_block_r;
 
 	string fname_histo_img;
 	string histo_img_fullpath;
@@ -534,35 +514,8 @@ int main(int argc, char **argv) {
 	string frameinfo_fullpath;
 
 	// ************		Load LUTs  ****************//
-	string fdir_code = "/home/rbayerlein/Code/Recon/server/explorer-master/read_lm/lut/";
-
-	string scatter_sino_path = fdir_code;  
-	scatter_sino_path.append("block_sino_f0_scatters.sino4d"); 
-	ifstream scatter_sino_read; 
-	scatter_sino_read.open(scatter_sino_path.c_str(),  ios::in | ios::binary); 
-	if (!scatter_sino_read) {
-		cout << "could not open scatter sino" <<  endl;
-		return 1; 
-	}
-	vector<double> scatter_sino(num_bins_sino_block * num_block_ring * num_block_ring);
-	for (int sci=0;  sci<(num_bins_sino_block * num_block_ring * num_block_ring); sci++) {
-		scatter_sino_read.read(reinterpret_cast<char*>(&scatter_sino[sci]), sizeof(double));
-	}
-	scatter_sino_read.close();
-
-        string tof_wt_path = fdir_code;  
-	tof_wt_path.append("tof_wt"); 
-	ifstream tof_wt_read; 
-	tof_wt_read.open(tof_wt_path.c_str(), ios::in | ios::binary);
-	if (!tof_wt_read) {
-		cout <<  "could not open tof_wt"; 
-		return 1;
-	}
-	vector<float> tof_wt(129);  
-	for (int ti=0; ti<129; ti++) {
-		tof_wt_read.read(reinterpret_cast<char*>(&tof_wt[ti]), sizeof(float)); 
-	}
-	tof_wt_read.close();  
+//	string fdir_code = "/home/eberg/code/explorer-master/read_lm/lut/";
+	string fdir_code = "lut/";
 
 	// open bank lut
 	int lutsum = 0;
@@ -572,6 +525,7 @@ int main(int argc, char **argv) {
 	lut_read.open(bank_lut_path.c_str(), ios::in | ios::binary);
 	if (!lut_read) {
 		cout << "could not open bank LUT file" << endl;
+		cout << bank_lut_path << endl;
 		return 1;
 	}
 	int bank_lut[54][2];
@@ -592,7 +546,9 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	Subsample SUBS(infile_fullpath);	// included 04-19-2021, rbayerlein
+	//Subsample* SUBS;
+	//SUBS = new Subsample(temp_str);
+	Subsample SUBS(infile_fullpath);
 
 	// crystal index - sinogram bin LUTs
 	vector<int> index_crystalpairs_transaxial_int16_1(num_bins_sino);
@@ -865,7 +821,6 @@ int main(int argc, char **argv) {
 	//	TOSW_read.read(reinterpret_cast<char *>(&toff_sw[tt]), sizeof(double));
 	//}
 
-        
 	vector<float> coinc_window(8); // ns
 	coinc_window[0] = 4500.0;
 	coinc_window[1] = 4800.0;
@@ -1096,31 +1051,30 @@ int main(int argc, char **argv) {
 				}
 				num_coinc += 1.0;
 
-				unitA = COINC::GetUiA(pRawBuffer[i]);
+				unitA = COINC::GetUiA(pRawBuffer[i]);	// 0:7 NOT 1:8
 				unitB = COINC::GetUiB(pRawBuffer[i]);
 
 				crys1 = COINC::GetCrysA(pRawBuffer[i]);
 				crys2 = COINC::GetCrysB(pRawBuffer[i]);
 
-				bankk = COINC::GetBankPair(pRawBuffer[i]) - 1;
+				bankk = COINC::GetBankPair(pRawBuffer[i]) - 1;	// returns bank pair index 0:53
 
-				transA = crys1 % 70;
+				transA = crys1 % 70; // transaxial crystal ID within a bank
 				transB = crys2 % 70;
 
-				modA = bank_lut[bankk][0];
-				modB = bank_lut[bankk][1];
+				modA = bank_lut[bankk][0];	// returns bank A
+				modB = bank_lut[bankk][1];	// and bank B
 
-				transA = transA + (modA * 70);
-				transB = transB + (modB * 70);
+				transA = transA + (modA * 70);	// absolute transaxial crystal ID A
+				transB = transB + (modB * 70);	// there are 70 transaxial crystals per bank (bank = 2*module)
 
-				axA = floor(crys1 / 70) + (unitA * 84);
-				axB = floor(crys2 / 70) + (unitB * 84);
-
-/*				keep_event = SUBS.KeepEvent(axA, axB, transA, transB);
+				axA = floor(crys1 / 70) + (unitA * 84);	// absolute axial crystal ID A
+				axB = floor(crys2 / 70) + (unitB * 84);	// there are 84 axial crystals per module/unit
+/*
+				keep_event = SUBS.KeepEvent(axA, axB, transA, transB);
 				if (!keep_event){
 				//	cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
 				//	cout << "keep event " << num_coinc << " (1=yes):\t" << keep_event << endl;
-					byte_location += 8; // move to next event (8 bytes)
 					num_coinc -= 1.0;
 					continue;
 				}
@@ -1135,10 +1089,7 @@ int main(int argc, char **argv) {
 				modA = floor(transA / 35);
 				modB = floor(transB / 35);
 
-				ind_block_trans = noindex_blockpairs_transaxial_int16[blkXa][blkXb];
-                                
-                                ind_block1 = ind_block_trans + (num_bins_sino_block * blkYa) + (num_bins_sino_block * num_block_ring * blkYb); 
-				ind_block2 = ind_block_trans + (num_bins_sino_block * blkYb) + (num_bins_sino_block * num_block_ring * blkYa); 
+				ind_block = noindex_blockpairs_transaxial_int16[blkXa][blkXb];
 
 				ind_module_trans =
 						noindex_modulepairs_transaxial_int16[modA][modB];
@@ -1199,8 +1150,14 @@ int main(int argc, char **argv) {
 	bool next_frame = false;
 	time_s = 0; // reset overall time
 
+	int TEST_COUNTER = 0;
 	bool run = true;
 	while (run) {
+//		TEST_COUNTER++;
+//		if (TEST_COUNTER>1) {
+//			cout << "TEST_COUNTER larger 1"<< endl;
+//			break;
+//		}
 		unsigned long long read_count = fread(pRawBuffer, sizeof(uint64_t),
 		BUFFER_SIZE, pInputFile); // returns BUFFER_SIZE events read unless EOF
 		for (unsigned long long i = 0; i < read_count; i++) { // loop through each event
@@ -1456,11 +1413,11 @@ int main(int argc, char **argv) {
 				if (!keep_event){
 				//	cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
 				//	cout << "keep event " << num_coinc << " (1=yes):\t" << keep_event << endl;
-					byte_location += 8; // move to next event (8 bytes)
 					num_coinc -= 1.0;
 					continue;
-				}	
-*/				
+				}		
+*/
+				
 				blkXa = floor(transA / 7);
 				blkXb = floor(transB / 7);
 				blkYa = floor(axA / 6);
@@ -1485,8 +1442,8 @@ int main(int argc, char **argv) {
 				//crys2 = crysaxB + (transcB*672);
 
 
-//				crysaxA = crysaxA + (short) unitA; // add unit gap
-//				crysaxB = crysaxB + (short) unitB; // add unit gap
+				crysaxA = crysaxA + (short) unitA; // add unit gap
+				crysaxB = crysaxB + (short) unitB; // add unit gap
 
 				short dout[5]; // 10-byte list-mode data format
 				dout[0] = COINC::GetTxID1(pRawBuffer[i]);
@@ -1515,9 +1472,8 @@ int main(int argc, char **argv) {
 
 				ind = noindex_crystalpairs_transaxial_int16[transcA][transcB];
 
-				ind_block_trans = noindex_blockpairs_transaxial_int16[blkXa][blkXb];
-                                ind_block1 = ind_block_trans + (num_bins_sino_block * blkYa) + (num_bins_sino_block * num_block_ring * blkYb); 
-                                ind_block2 = ind_block_trans + (num_bins_sino_block * blkYb) + (num_bins_sino_block * num_block_ring * blkYa); 
+				ind_block = noindex_blockpairs_transaxial_int16[blkXa][blkXb];
+
 				ind_module_trans =
 						noindex_modulepairs_transaxial_int16[modA][modB];
 
@@ -1525,7 +1481,7 @@ int main(int argc, char **argv) {
 						+ (num_bins_sino_module * 8 * unitB);
 				ind_module2 = ind_module_trans + (num_bins_sino_module * unitB)
 						+ (num_bins_sino_module * 8 * unitA);
-				if (ind_module_trans >= 0 && SUBS.KeepEvent(axA, axB, transA, transB)) {
+				if (ind_module_trans >= 0) {
 					if (COINC::IsDelayFlag(pRawBuffer[i])) {
 						random_rate_new[modA + 24 * unitA] =
 								random_rate_new[modA + 24 * unitA] + 1.0;
@@ -1551,21 +1507,11 @@ int main(int argc, char **argv) {
 					}
 				}
 
-				if (ind_block_trans >=0 && SUBS.KeepEvent(axA, axB, transA, transB)) { 
-					if (COINC::IsDelayFlag(pRawBuffer[i])) {
-                                               sino_block_r[ind_block1] = sino_block_r[ind_block1] + 1.0; 
-//                                               sino_block_r[ind_block2] = sino_block_r[ind_block2] + 1.0; 
-					} else {
-					       sino_block[ind_block1] = sino_block[ind_block1] + 1.0; 
-//                                               sino_block[ind_block2] = sino_block[ind_block2] + 1.0; 
-					}
-				}
-				
-				if (ind >= 0 && SUBS.KeepEvent(axA, axB, transA, transB)) {
+				if (ind >= 0) {
 					if (!COINC::IsDelayFlag(pRawBuffer[i])) { // prompt event
 						if ((ind_block > 0)
 								&& (abs(blkYa - blkYb) <= block_ax_span)) {
-						//	sino_block[ind_block2]++;
+							sino_block[ind_block2]++;
 						}
 						if (write_lmfile) {
 							pids_p[p_index].txID1 = dout[0];
@@ -1611,21 +1557,6 @@ int main(int argc, char **argv) {
 								}
 
 								rtemp = rtemp * (39.0625 / t_window);
-								
-								//stemp = (float)scatter_sino[ind_block1];
-                                                                //if (blkYa == blkYb) {
-								//	stemp =  stemp  /  (1.0  * (float) num_lor_blkpair);
-								//}   else {
-								//	stemp =  stemp  / ((float) num_lor_blkpair);  
-								//}
-								//if (abs(dout[4] < 64)) {
-					
-								//	stemp = stemp *tof_wt[dout[4]+64];
-								//} else {
-								//	stemp = 0.0; 
-								//}
-								//stemp = stemp * nc_crys[crysaxA + 672*transcA] * nc_crys[crysaxB + 672*transcB]; 
-//								rtemp =  rtemp + stemp; 
 								rtemp = rtemp * mtemp;
 
 								//rtemp = rtemp * (nc_crys[crys1] / nc_mod[modA]) * (nc_crys[crys2] / nc_mod[modB]);
@@ -1684,7 +1615,7 @@ int main(int argc, char **argv) {
 				frameinfo_fullpath.append(fname_out);
 				ofstream frameinfo_out;
 				frameinfo_out.open(frameinfo_fullpath.c_str());
-				cout << frameinfo_fullpath << "\n";
+				cout << "info out :\t" << frameinfo_fullpath << "\n";
 				if (!frameinfo_out) {
 					cout << "Could not create frame info file\n";
 				}
@@ -1707,20 +1638,6 @@ int main(int argc, char **argv) {
 				ss.clear();
 				str_temp = "";
 				frameinfo_out.close();
-
-				// write block sinos
-				outfile_block_sino.write((char*) sino_block.data(),
-                                                                sino_block.size() * sizeof(double));
-				outfile_block_sino_r.write((char*) sino_block_r.data(), 
- 								sino_block_r.size() * sizeof(double)); 
-
-				for (int blocki = 0; blocki < (num_bins_sino_block * ind_block * ind_block); blocki++) {
-				        sino_block[blocki] = 0.0; 
-					sino_block_r[blocki] = 0.0; 
-				}
-
-				outfile_block_sino.close(); 
-				outfile_block_sino_r.close(); 
 
 				// close and flush (if applicable) output lm files
 				fwrite(pids_p, sizeof(ids), p_index, pPromptFile);
@@ -1767,19 +1684,8 @@ int main(int argc, char **argv) {
 						outfile_fullpath_m = outfolder + fname_out + "_prompts."
 								+ raw_num + ".mul_fac";
 
-						fname_out = ""; 
-						ss << ""; 
-						ss.clear(); 
-						str_temp = ""; 
-
-						stringstream bbss; 
-						bbss << "block_sino_f" << frame_num; 
-						fname_out = bbss.str(); 
-						blocksino_fullpath_p = outfolder + fname_out + "_prompts." + raw_num + ".raw"; 
-						blocksino_fullpath_r = outfolder + fname_out + "_randoms." + raw_num + ".raw"; 
-
-						bbss << "";
-						bbss.clear();
+						ss << "";
+						ss.clear();
 						str_temp = "";
 						fname_out = "";
 
@@ -1789,9 +1695,6 @@ int main(int argc, char **argv) {
 								ios::out | ios::binary);
 						outfile_m.open(outfile_fullpath_m.c_str(),
 								ios::out | ios::binary);
-
-						outfile_block_sino.open(blocksino_fullpath_p.c_str(), ios::out | ios::binary); 
-						outfile_block_sino_r.open(blocksino_fullpath_r.c_str(), ios::out | ios::binary); 
 
 					}
 
@@ -1804,16 +1707,16 @@ int main(int argc, char **argv) {
 	} // end while loop
 
 	// ==================== cleanup ====================
-
+	cout << "cleaning up... " << endl;
 	fclose(pInputFile);
 
-	//if (pPromptFile) { // why bother?
-	//	fwrite(pids_p, sizeof(ids), p_index, pPromptFile); // flush
-	//	fclose(pPromptFile);
-	//	//outfile_r.close();
-	//	outfile_s.close();
-	//	outfile_m.close();
-	//}
+	if (pPromptFile) { // why bother?
+		fwrite(pids_p, sizeof(ids), p_index, pPromptFile); // flush
+		//fclose(pPromptFile);	// causes core dump for whatever the reason might be...
+		//outfile_r.close();
+		outfile_s.close();
+		outfile_m.close();
+	}
 	outfile_singles.close();
 	outfile_singles_module.close();
 	outfile_randoms_rate.close();
@@ -1847,6 +1750,7 @@ int main(int argc, char **argv) {
 	delete[] pRawBuffer;
 	delete[] pids_p;
 
+	cout << " done" << endl;
 	return 0;
 
 }
