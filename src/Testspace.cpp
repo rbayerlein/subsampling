@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
 
 	//Subsample* SUBS;
 	//SUBS = new Subsample(temp_str);
-	Subsample SUBS(infile_fullpath);
+	Subsample SUBS(infile_fullpath, 0); // 0 is the first time stamp, which is not considered in this testspace
 
 
 	/// ************	Main Test Space Start  ****************///
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 				axB = floor(crys2 / 70) + (unitB * 84);	// there are 84 axial crystals per module/unit
 				cout << "event " << eventCounter << endl;
 				cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
-				cout << "keep event (1=yes):\t" << SUBS.KeepEvent(axA, axB, transA, transB) << endl;
+				cout << "keep event (1=yes):\t" << SUBS.KeepEvent(axA, axB, transA, transB, 0) << endl;		
 
 				eventCounter++;
 				//char strout[1024];

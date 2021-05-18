@@ -592,8 +592,6 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	Subsample SUBS(infile_fullpath);	// included 04-19-2021, rbayerlein
-
 	// crystal index - sinogram bin LUTs
 	vector<int> index_crystalpairs_transaxial_int16_1(num_bins_sino);
 	vector<int> index_crystalpairs_transaxial_int16_2(num_bins_sino);
@@ -924,6 +922,10 @@ int main(int argc, char **argv) {
 			<< hour00 << ":" << minute00 << ":" << second00 << "." << milli00
 			<< endl;
 
+
+	Subsample SUBS(infile_fullpath, hour00*60*60+minute00*60+second00);	// included 04-19-2021, rbayerlein
+	
+
 	// ========================= get initial count rates =========================
 
 	ss0 = milli00; // temporary assignment of start time
@@ -1116,7 +1118,7 @@ int main(int argc, char **argv) {
 				axA = floor(crys1 / 70) + (unitA * 84);
 				axB = floor(crys2 / 70) + (unitB * 84);
 
-/*				keep_event = SUBS.KeepEvent(axA, axB, transA, transB);
+/*				keep_event = SUBS.KeepEvent(axA, axB, transA, transB, hour1*60*60+minute1*60+second1);
 				if (!keep_event){
 				//	cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
 				//	cout << "keep event " << num_coinc << " (1=yes):\t" << keep_event << endl;
@@ -1452,7 +1454,7 @@ int main(int argc, char **argv) {
 				axA = floor(crys1 / 70) + (unitA * 84);
 				axB = floor(crys2 / 70) + (unitB * 84);
 /*
-				keep_event = SUBS.KeepEvent(axA, axB, transA, transB);
+				keep_event = SUBS.KeepEvent(axA, axB, transA, transB, hour1*60*60+minute1*60+second1);
 				if (!keep_event){
 				//	cout << "coincidences A,B (trans/ax):\t(" << transA << "/" << axA << "),\t(" << transB << "/" << axB << ")" << endl;
 				//	cout << "keep event " << num_coinc << " (1=yes):\t" << keep_event << endl;
@@ -1525,7 +1527,7 @@ int main(int argc, char **argv) {
 						+ (num_bins_sino_module * 8 * unitB);
 				ind_module2 = ind_module_trans + (num_bins_sino_module * unitB)
 						+ (num_bins_sino_module * 8 * unitA);
-				if (ind_module_trans >= 0 && SUBS.KeepEvent(axA, axB, transA, transB)) {
+				if (ind_module_trans >= 0 && SUBS.KeepEvent(axA, axB, transA, transB, hour1*60*60+minute1*60+second1)) {
 					if (COINC::IsDelayFlag(pRawBuffer[i])) {
 						random_rate_new[modA + 24 * unitA] =
 								random_rate_new[modA + 24 * unitA] + 1.0;
@@ -1551,7 +1553,7 @@ int main(int argc, char **argv) {
 					}
 				}
 
-				if (ind_block_trans >=0 && SUBS.KeepEvent(axA, axB, transA, transB)) { 
+				if (ind_block_trans >=0 && SUBS.KeepEvent(axA, axB, transA, transB, hour1*60*60+minute1*60+second1)) { 
 					if (COINC::IsDelayFlag(pRawBuffer[i])) {
                                                sino_block_r[ind_block1] = sino_block_r[ind_block1] + 1.0; 
 //                                               sino_block_r[ind_block2] = sino_block_r[ind_block2] + 1.0; 
@@ -1561,7 +1563,7 @@ int main(int argc, char **argv) {
 					}
 				}
 				
-				if (ind >= 0 && SUBS.KeepEvent(axA, axB, transA, transB)) {
+				if (ind >= 0 && SUBS.KeepEvent(axA, axB, transA, transB, hour1*60*60+minute1*60+second1)) {
 					if (!COINC::IsDelayFlag(pRawBuffer[i])) { // prompt event
 						if ((ind_block > 0)
 								&& (abs(blkYa - blkYb) <= block_ax_span)) {
