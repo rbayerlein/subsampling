@@ -32,6 +32,7 @@
 *.app
 process_lm_sino_explorer_singlefile_release
 test
+run_combine_lm_server
 
 # Supplementory Files
 Reconstruction_Parameters_*

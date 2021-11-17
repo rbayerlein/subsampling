@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <ctime>
 
 using namespace std;
 
@@ -27,11 +28,23 @@ public:
 																	Takes the axial and transaxial coordinates of the two coincident crystals as input.
 																	*/
 
-	std::string GetRawInputFullPath(){return input_raw_fullpath;};
+	std::string GetRawInputFullPath(){return input_raw_fullpath;};	
+	int GetType(std::string s_temp);								/*!< Function that takes the string from the config file and returns the number of the type*/
+	int GetParameterValue(std::string s_temp);							/*!< Function that takes the string from the config file and returns the parameter value*/
+
+	int GetTimePerBed(){return time_per_bed;};
+	int GetBedOverlap(){return bed_overlap;};
+	int GetNumBeds(){return num_beds;};
+	int GetStartRing(){return start_ring;};
+	int GetRingsPerBed(){return rings_per_bed;};
+	int GetNumCycles(){return num_cycles;};
+
+	int GetTotalLORExposure(int axA, int axB){return ExposureLUT[axA][axB];};	/*!< Function that returns the total time (in seconds) that LOR contributes to the data set*/
 
 private:
 	void Initialize();												/*!< Function to initialize bed positions and numbers of cycles etc */
 	void read_crys_eff();											/*!< Function to read in the crystall efficieny from file  */
+	void FillExposureTable();
 	std::string input_raw_fullpath;									/*!< Input file path for the Reconstruction_Paramters_X file (where X in 1:8) */
 	std::string input_config;										/*!< Full path to the config file */
 	static const unsigned int BUFFER_size = 679*840;				/*!< Size of the allocated memory into which crystal efficiencies will be read */
@@ -43,8 +56,9 @@ private:
 	int num_trans_crys_ring=840;									/*!< Number of crystals per transaxial ring (there is no axial ring, of course)*/
 	int num_units=8;												/*!< Number of units (and modules) in axial direction*/
 
-	std::string output_DEBUG;
-	ofstream o_DEBUG;
+	bool createLogFile;
+	std::string output_LOG;
+	ofstream o_LOG;
 
 	std::vector<int> bed_time_start;								/*!< start time for each bed position; included in current interval*/
 	std::vector<int> bed_time_end;									/*!< end time; excluded from current interval */
@@ -54,13 +68,14 @@ private:
 	int num_beds;													/*!< number of bed positions. Does not include multiple scans of same position*/
 	int start_ring;													/*!< first ring of first bed position*/
 	int rings_per_bed;												/*!< number of rings per bed position*/
-	float bed_overlap;												/*!< overlap between bed positions as value between 0 and 1.*/
+	int bed_overlap;												/*!< overlap between bed positions as value between 0 and 1.*/
 	int num_cycles;													/*!< number cycles per bed position. Usually 1.*/
 	int time_per_bed;
 
 	int firstTimeStamp;												/*!< first time stamp in the data set */
-	int debugCounter;
+	int config_param[6];											/*!< config parameters like number of beds, overlap, start ring...*/
 
+	int ExposureLUT[679][679];										/*!< contains the times that each pair of crystal rings contributes to the data set (in seconds) */
 };
 
 
